@@ -1,3 +1,7 @@
+from datetime import datetime
+from enum import Enum
+from typing import List, Optional
+
 from fastapi import FastAPI
 
 from pydantic import BaseModel, Field
@@ -10,12 +14,35 @@ fake_users = [
     {'id': 1, 'role': 'admin', 'name': 'George'},
     {'id': 2, 'role': 'investor', 'name': 'Max'},
     {'id': 3, 'role': 'trader', 'name': 'Vlad'},
+    {'id': 4, 'role': 'investor', 'name': 'Jinx', 'degree': [
+        {'id': 1, 'created_at': '2023-01-01T00:00:00', 'type_degree': 'expert'}
+    ]},
 ]
 
 
-@app.get('/users/{user_id}')  # <- path
-def get_user_id(user_id: int):  #vse parametri nahodyaschiesya v seredine path po defoltu = str, chto b privesti vse eto k int nado postavit' (user_id: int)
-    return [user for user in fake_users if user.get('id') == user_id]  #-> [expression for item in iterable if condition == True]
+class DegreeType(Enum):
+    newbie = 'newbie'
+    expert = 'expert'
+
+
+class Degree(BaseModel):
+    id: int
+    created_at: datetime
+    type_degree: DegreeType
+
+
+class User(BaseModel):
+    id: int
+    role: str
+    name: str
+    degree: Optional[List[Degree]] = [] # opcionalno, chto b ne lezli oshibki - optional[...] = []<- po defoltu, otday putoy spisok ili tam prosto budet null
+
+
+@app.get('/users/{user_id}', response_model=List[User])  # <- path
+def get_user_id(
+        user_id: int):  # vse parametri nahodyaschiesya v seredine path po defoltu = str, chto b privesti vse eto k int nado postavit' (user_id: int)
+    return [user for user in fake_users if
+            user.get('id') == user_id]  # -> [expression for item in iterable if condition == True]
 
 
 fake_trades = [
@@ -36,11 +63,9 @@ class Trade(BaseModel):
 
 
 @app.post('/trades')
-def add_trades(trades: list[Trade]):
+def add_trades(trades: List[Trade]):
     fake_trades.extend(trades)
     return {'status': 200, 'data': fake_trades}
-
-
 
 # @app.get('/trades')
 # def get_trades(limit: int = 1, offset: int = 0):   #limit - limit po sdelkam na stranice, offset - peremescheniye po spisku(cherez skolko objectov prigayem),   int = 1, int = 0 - znacheniye po umolchaniyu
@@ -56,6 +81,6 @@ def add_trades(trades: list[Trade]):
 
 # @app.post('/users/{user_id}')
 # def change_user_name(user_id: int, new_name: str):
-#     current_user = list(filter(lambda user: user.get('id') == user_id, fake_users2))[0] #<-iteriruemsya po useru, fake_user2 - iteriruyemiy object
+#     current_user = List(filter(lambda user: user.get('id') == user_id, fake_users2))[0] #<-iteriruemsya po useru, fake_user2 - iteriruyemiy object
 #     current_user['name'] = new_name
 #     return {'status': 200, 'data': current_user} #tut vozvrashcaetsya status 200, chto b user ponimal chto vse ok, operaciya vipolnena, a potom vozvraschetsya ego obnovlenniye danniye
