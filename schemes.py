@@ -21,13 +21,10 @@ class User(BaseModel):
     id: int
     role: str
     name: str
-    degree: Optional[List[
-        Degree]] = []  # opcionalno, chto b ne lezli oshibki - optional[...] = []<- po defoltu, otday putoy spisok ili tam prosto budet null
+    degree: Optional[List[Degree]] = []  # opcionalno, chto b ne lezli oshibki - optional[...] = []<- po defoltu, otday putoy spisok ili tam prosto budet null
 
 
 class Trade(BaseModel):
-    id: int
     user_id: int
     currency: str = Field(max_length=10)
-    side: str
     date: float
